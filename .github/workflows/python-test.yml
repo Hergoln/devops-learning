@@ -1,0 +1,35 @@
+name: Python run tests
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - main
+    paths:
+      - python/**
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: |
+          echo "Hello world!"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: set up python dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install python3-pip
+          sudo pip install unittest
+
+      - name: run python tests
+        working-directory: ./python
+        run: python 
