@@ -26,8 +26,8 @@ jobs:
 
       - name: set up python dependencies
         run: |
-          pip install unittest
+          echo "Only dependency so far is unittest which is built in module"
 
       - name: run python tests
         working-directory: ./python
-        run: python 
+        run: python -m unittest -v
