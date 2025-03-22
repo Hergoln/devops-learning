@@ -9,7 +9,8 @@ on:
       - python/**
 
 jobs:
-  test:
+  python-tests:
+    name: Run python code tests
     runs-on: ubuntu-latest
 
     steps:

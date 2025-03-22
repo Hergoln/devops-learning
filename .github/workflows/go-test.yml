@@ -9,7 +9,8 @@ on:
       - go/**
 
 jobs:
-  test:
+  go-test:
+    name: Run go code tests
     runs-on: ubuntu-latest
 
     steps:
