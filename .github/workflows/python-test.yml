@@ -26,9 +26,7 @@ jobs:
 
       - name: set up python dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install python3-pip
-          sudo pip install unittest
+          pip install unittest
 
       - name: run python tests
         working-directory: ./python
