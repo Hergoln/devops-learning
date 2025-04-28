@@ -11,7 +11,7 @@ RUN apt -y install python-is-python3
 RUN apt -y install python3-requests
 
 # install module with pip
-RUN apt -y install python3-pip
-RUN pip install pandas
+# RUN apt -y install python3-pip
+# RUN pip install pandas
 
 ENTRYPOINT [ "/bin/bash", "sf.sh" ]
