@@ -14,3 +14,8 @@ docker build -t sf-t -f dockerfiles/sf.dockerfile dockerfiles
 docker run -it sf-t
 ```
 > -it : interactive
+
+
+## Build python image with requirements file in different location then dockerfile
+```sh
+```
