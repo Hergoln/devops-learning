@@ -1,6 +1,0 @@
-FROM ubuntu:latest
-
-COPY . .
-
-# ubuntu runs /bin/bash by default
-# ENTRYPOINT [ "/bin/bash" ]

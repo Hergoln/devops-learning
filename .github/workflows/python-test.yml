@@ -12,22 +12,12 @@ jobs:
   python-tests:
     name: Run python code tests
     runs-on: ubuntu-latest
+    container:
+      image: python:3.13
 
     steps:
-      - run: |
-          echo "Hello world!"
-
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: set up python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-
-      - name: set up python dependencies
-        run: |
-          echo "Only dependency so far is unittest which is built in module"
 
       - name: run python tests
         working-directory: ./python
