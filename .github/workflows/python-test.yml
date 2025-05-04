@@ -21,4 +21,5 @@ jobs:
 
       - name: run python tests
         working-directory: ./python
-        run: python -m unittest -v >> $GITHUB_STEP_SUMMARY
+        run: |
+          python -m unittest -v >> $GITHUB_STEP_SUMMARY
