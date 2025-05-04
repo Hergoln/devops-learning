@@ -1,0 +1,14 @@
+name: Build and publish dockerfile
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - dockerfiles/sf.dockerfile
+
+jobs:
+  build-dockerfile:
+    runs-on: ubuntu-latest
+    steps:
+      
