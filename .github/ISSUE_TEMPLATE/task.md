@@ -1,7 +1,7 @@
 ---
 name: Task
 about: Template for task issues for project
-title: "[TASK] > descriptive title"
+title: "[TASK]"
 labels: ''
 assignees: ''
 
