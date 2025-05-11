@@ -45,5 +45,5 @@ jobs:
 
       - name: Build image
         run: |
-          docker build . -t ghcr.io/Hergoln/sf-t:$tag -f $path
-          docker push ghcr.io/Hergoln/sf-t:$tag
+          docker build . -t ghcr.io/hergoln/sf-t:$tag -f $path
+          docker push ghcr.io/hergoln/sf-t:$tag
