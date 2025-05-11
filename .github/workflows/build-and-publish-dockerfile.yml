@@ -7,6 +7,11 @@ on:
     paths:
       - dockerfiles/sf.dockerfile
   workflow_dispatch:
+    inputs:
+      TAG:
+        required: true
+      PATH:
+        required: true
 
 jobs:
   build-dockerfile:
@@ -14,7 +19,18 @@ jobs:
     defaults:
       run:
         working-directory: 'dockerfiles'
+
+    env:
+      path: 'sf.dockerfile'
+      tag: 'latest'
+
     steps:
+      - name: set up envs
+        if: ${{ github.event == 'workflow_dispatch' }}
+        run: |
+          echo "path=${{ inputs.PATH }}" >> $GITHUB_ENV
+          echo "tag=${{ inputs.TAG }}" >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/chekout@v4
 
@@ -27,5 +43,5 @@ jobs:
 
       - name: Build image
         run: |
-          docker build . -t ghcr.io/Hergoln/sf-t:latest -f sf.dockerfile
-          docker push ghcr.io/Hergoln/sf-t:latest
+          docker build . -t ghcr.io/Hergoln/sf-t:$tag -f $path
+          docker push ghcr.io/Hergoln/sf-t:$tag
