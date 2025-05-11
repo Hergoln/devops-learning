@@ -10,8 +10,10 @@ on:
     inputs:
       TAG:
         required: true
+        default: 'latest'
       PATH:
         required: true
+        default: 'sf.dockerfile'
 
 jobs:
   build-dockerfile:
