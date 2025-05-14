@@ -10,8 +10,10 @@ on:
     inputs:
       TAG:
         required: true
+        default: 'latest'
       PATH:
         required: true
+        default: 'sf.dockerfile'
 
 jobs:
   build-dockerfile:
@@ -32,7 +34,7 @@ jobs:
           echo "tag=${{ inputs.TAG }}" >> $GITHUB_ENV
 
       - name: Checkout
-        uses: actions/chekout@v4
+        uses: actions/checkout@v4
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -43,5 +45,8 @@ jobs:
 
       - name: Build image
         run: |
-          docker build . -t ghcr.io/Hergoln/sf-t:$tag -f $path
-          docker push ghcr.io/Hergoln/sf-t:$tag
+          docker build . -t ghcr.io/hergoln/sf-t:$tag -f $path
+
+      - name: Push image
+        run: |
+          docker push ghcr.io/hergoln/sf-t:$tag
