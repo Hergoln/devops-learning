@@ -1,4 +1,4 @@
-Testing REST API usage for potential Hacker News implementation of my own
+Testing REST API usage for potential Hacker News implementation of my own.
 
 ## Notes
 When running code using container and wants to use a volume, have to pass in absolute path instead of relative path.

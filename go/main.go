@@ -6,8 +6,6 @@ import (
 	"io/ioutil"
 )
 
-// use golang container to run this code before comiting
-
 func main() {
 	callRandomAPI()
 }
