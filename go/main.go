@@ -8,6 +8,20 @@ import (
 	"encoding/json"
 )
 
+/* task #9
+	1. gather all repositories token has access to
+	2. use https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content api endpoint to get directory .github/workflows
+	3. retrieve all workflows files
+	4. check whether those files contain workflow which is being look for
+	4a. [STRETCH/NEXT STEP] compare all workflows with set of workflows
+	5. return statistics regarding the usage, which repository uses which workflow
+*/
+/* task #10
+	1. Extract command-wise code to separate locations/files
+	2. in main implement parsing of input
+	3. validation could be left to each specific command (command pattern?)
+	4. implement mechanism which would enable --help flag being used on every command
+*/
 func main() {
 	callGitHubAPI()
 }
