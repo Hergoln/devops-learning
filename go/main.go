@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 	"io/ioutil"
+	"encoding/json"
 )
 
 func main() {
@@ -39,8 +40,9 @@ func callGitHubAPI() {
 	fmt.Printf("%d\n", res.StatusCode)
 
 	var body string
+	var bodyBytes []byte
 	if res.StatusCode == http.StatusOK {
-		bodyBytes, err := ioutil.ReadAll(res.Body)
+		bodyBytes, err = ioutil.ReadAll(res.Body)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -49,4 +51,14 @@ func callGitHubAPI() {
 	}
 
 	fmt.Printf("Body: %s\n", body)
+
+	var jsonBody map[string]interface{}
+
+	err = json.Unmarshal(bodyBytes, &jsonBody)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	fmt.Printf("repo name: %s\n", jsonBody["full_name"].(string))
 }
