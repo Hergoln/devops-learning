@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"fmt"
 	"net/http"
 	"time"
@@ -21,13 +22,16 @@ import (
 	2. in main implement parsing of input
 	3. validation could be left to each specific command (command pattern?)
 	4. implement mechanism which would enable --help flag being used on every command
+	5. implement flag to exclude forked repositories
 */
 func main() {
-	callGitHubAPI()
+	// read from input or read filename from input and then read from file
+	PAT := os.Args[1]
+	callGitHubAPI(PAT)
 }
 
-func callGitHubAPI() {
-  requestURL := "https://api.github.com/repos/Hergoln/devops-learning"
+func callGitHubAPI(PAT string) {
+  requestURL := "https://api.github.com/user/repos"
 
 	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
 	if err != nil {
@@ -37,6 +41,7 @@ func callGitHubAPI() {
 
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", PAT))
 
 	client := http.Client{
 		Timeout: 30 * time.Second,
@@ -48,31 +53,50 @@ func callGitHubAPI() {
 		fmt.Println(err.Error())
 		return
 	}
+	bodyBytes := readBody(res)
+	jsonBody := unmarshalReposRes(bodyBytes)
+	names := extractRepos(jsonBody)
 
-	defer res.Body.Close()
+	fmt.Println(names)
+}
 
-	fmt.Printf("%d\n", res.StatusCode)
+func unmarshalReposRes(body []byte) []map[string]any {
+	// var jsonBody map[string]any
+	var jsonBody []map[string]any
 
-	var body string
-	var bodyBytes []byte
-	if res.StatusCode == http.StatusOK {
-		bodyBytes, err = ioutil.ReadAll(res.Body)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		body = string(bodyBytes)
-	}
-
-	fmt.Printf("Body: %s\n", body)
-
-	var jsonBody map[string]interface{}
-
-	err = json.Unmarshal(bodyBytes, &jsonBody)
+	err := json.Unmarshal(body, &jsonBody)
 	if err != nil {
 		fmt.Println(err.Error())
-		return
+		return nil
 	}
 
-	fmt.Printf("repo name: %s\n", jsonBody["full_name"].(string))
+	// fmt.Printf("repo name: %s\n", jsonBody["full_name"].(string))
+	return jsonBody
+}
+
+func readBody(response *http.Response) []byte {
+	defer response.Body.Close()
+	fmt.Printf("%d\n", response.StatusCode)
+
+	if response.StatusCode == http.StatusOK {
+		bytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			fmt.Println(err.Error())
+			return nil
+		}
+		return bytes
+	}
+
+	return nil
+}
+
+func extractRepos(jsonBody []map[string]any) []string {
+	reposCount := len(jsonBody)
+	output := make([]string, 0, reposCount)
+	for idx := range jsonBody {
+		// with type assertion
+		output = append(output, jsonBody[idx]["full_name"].(string))
+	}
+
+	return output
 }
