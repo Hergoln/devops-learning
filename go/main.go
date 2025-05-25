@@ -9,6 +9,13 @@ import (
 	"encoding/json"
 )
 
+var (
+	REQUEST_ERROR int = 1
+	API_CALL_ERROR int = 2
+	UNMARSHAL_ERROR int = 3
+	BYTE_READ_ERROR int = 4
+)
+
 /* task #9
 	1. gather all repositories token has access to
 	2. use https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content api endpoint to get directory .github/workflows
@@ -36,7 +43,7 @@ func callGitHubAPI(PAT string) {
 	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
 	if err != nil {
 		fmt.Println(err.Error())
-		return
+		os.Exit(REQUEST_ERROR)
 	}
 
 	req.Header.Set("Accept", "application/vnd.github+json")
@@ -51,13 +58,13 @@ func callGitHubAPI(PAT string) {
 
 	if err != nil {
 		fmt.Println(err.Error())
-		return
+		os.Exit(API_CALL_ERROR)
 	}
 	bodyBytes := readBody(res)
 	jsonBody := unmarshalReposRes(bodyBytes)
 	names := extractRepos(jsonBody)
 
-	fmt.Println(names)
+	
 }
 
 func unmarshalReposRes(body []byte) []map[string]any {
@@ -67,22 +74,20 @@ func unmarshalReposRes(body []byte) []map[string]any {
 	err := json.Unmarshal(body, &jsonBody)
 	if err != nil {
 		fmt.Println(err.Error())
-		return nil
+		os.Exit(UNMARSHAL_ERROR)
 	}
 
-	// fmt.Printf("repo name: %s\n", jsonBody["full_name"].(string))
 	return jsonBody
 }
 
 func readBody(response *http.Response) []byte {
 	defer response.Body.Close()
-	fmt.Printf("%d\n", response.StatusCode)
-
-	if response.StatusCode == http.StatusOK {
-		bytes, err := ioutil.ReadAll(response.Body)
+	bytes, err := ioutil.ReadAll(response.Body)
+	
+	if response.StatusCode == http.StatusOK {	
 		if err != nil {
 			fmt.Println(err.Error())
-			return nil
+			os.Exit(BYTE_READ_ERROR)
 		}
 		return bytes
 	}
