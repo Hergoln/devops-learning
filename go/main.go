@@ -16,6 +16,12 @@ var (
 	BYTE_READ_ERROR int = 4
 )
 
+type Repository struct {
+	name string
+	url string
+	contentsUrl string
+}
+
 /* task #9
 	1. gather all repositories token has access to
 	2. use https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content api endpoint to get directory .github/workflows
@@ -62,9 +68,11 @@ func callGitHubAPI(PAT string) {
 	}
 	bodyBytes := readBody(res)
 	jsonBody := unmarshalReposRes(bodyBytes)
-	names := extractRepos(jsonBody)
+	repos := extractRepos(jsonBody)
 
-	
+	for _, repo := range repos {
+		extractWorkflows(repo)
+	}
 }
 
 func unmarshalReposRes(body []byte) []map[string]any {
@@ -95,13 +103,25 @@ func readBody(response *http.Response) []byte {
 	return nil
 }
 
-func extractRepos(jsonBody []map[string]any) []string {
+func extractRepos(jsonBody []map[string]any) []Repository {
 	reposCount := len(jsonBody)
 	output := make([]string, 0, reposCount)
-	for idx := range jsonBody {
+	for _, jsonRepo := range jsonBody {
 		// with type assertion
-		output = append(output, jsonBody[idx]["full_name"].(string))
+		output = append(output, newRepository(jsonRepo))
 	}
 
 	return output
+}
+
+func newRepository(jsonRepo map[string]any) *Repository {
+	repo := Repository{
+		name: jsonRepo["full_name"].(string),
+		url: jsonRepo["url"].(string),
+		contentsUrl: jsonRepo["contents_url"].(string)
+	}
+}
+
+func extractWorkflows(repo *Repository ) {
+	fmt.Println(repo)
 }
