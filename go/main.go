@@ -7,6 +7,7 @@ import (
 	"time"
 	"io/ioutil"
 	"encoding/json"
+	"strings"
 )
 
 var (
@@ -43,18 +44,16 @@ func main() {
 	callGitHubAPI(PAT)
 }
 
-func callGitHubAPI(PAT string) {
-  requestURL := "https://api.github.com/user/repos"
-
-	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
+func callAPI(url string, headers map[string]string) *http.Response {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(REQUEST_ERROR)
 	}
 
-	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", PAT))
+	for header, value := range headers {
+		req.Header.Set(header, value)
+	}
 
 	client := http.Client{
 		Timeout: 30 * time.Second,
@@ -66,12 +65,24 @@ func callGitHubAPI(PAT string) {
 		fmt.Println(err.Error())
 		os.Exit(API_CALL_ERROR)
 	}
+
+	return res
+}
+
+func callGitHubAPI(PAT string) {
+  requestURL := "https://api.github.com/user/repos"
+	headers := map[string]string{
+		"Accept": "application/vnd.github+json",
+		"X-GitHub-Api-Version": "2022-11-28",
+		"Authorization": fmt.Sprintf("Bearer %s", PAT),
+	}
+	res := callAPI(requestURL, headers)
 	bodyBytes := readBody(res)
 	jsonBody := unmarshalReposRes(bodyBytes)
 	repos := extractRepos(jsonBody)
 
 	for _, repo := range repos {
-		extractWorkflows(repo)
+		extractWorkflows(repo, headers)
 	}
 }
 
@@ -100,12 +111,13 @@ func readBody(response *http.Response) []byte {
 		return bytes
 	}
 
+	fmt.Println("No body found")
 	return nil
 }
 
-func extractRepos(jsonBody []map[string]any) []Repository {
+func extractRepos(jsonBody []map[string]any) []*Repository {
 	reposCount := len(jsonBody)
-	output := make([]string, 0, reposCount)
+	output := make([]*Repository, 0, reposCount)
 	for _, jsonRepo := range jsonBody {
 		// with type assertion
 		output = append(output, newRepository(jsonRepo))
@@ -118,10 +130,14 @@ func newRepository(jsonRepo map[string]any) *Repository {
 	repo := Repository{
 		name: jsonRepo["full_name"].(string),
 		url: jsonRepo["url"].(string),
-		contentsUrl: jsonRepo["contents_url"].(string)
+		contentsUrl: jsonRepo["contents_url"].(string),
 	}
+	return &repo
 }
 
-func extractWorkflows(repo *Repository ) {
-	fmt.Println(repo)
+func extractWorkflows(repo *Repository, headers map[string]string) {
+	workflowsUrl := strings.Replace(repo.contentsUrl, "{+path}", ".github/workflows", 1)
+	res := callAPI(workflowsUrl, headers)
+	bodyBytes := readBody(res)
+	fmt.Println(bodyBytes)
 }
