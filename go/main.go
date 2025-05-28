@@ -18,9 +18,19 @@ var (
 )
 
 type Repository struct {
-	name string
-	url string
-	contentsUrl string
+	Name string
+	Url string
+	ContentsUrl string
+}
+
+type GHContent struct {
+	Name 					string `json:"name"`
+	Path 					string `json:"path"`
+	Url 					string `json:"url"`
+	Git_url 			string `json:"git_url"`
+	Download_url 	string `json:"download_url"`
+	Type 					string `json:"type"`
+	Content				string `json:"content"`
 }
 
 /* task #9
@@ -45,6 +55,7 @@ func main() {
 }
 
 func callAPI(url string, headers map[string]string) *http.Response {
+	fmt.Println("Calling url: ", url)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -78,16 +89,15 @@ func callGitHubAPI(PAT string) {
 	}
 	res := callAPI(requestURL, headers)
 	bodyBytes := readBody(res)
-	jsonBody := unmarshalReposRes(bodyBytes)
+	jsonBody := unmarshalArray(bodyBytes)
 	repos := extractRepos(jsonBody)
 
 	for _, repo := range repos {
-		extractWorkflows(repo, headers)
+		gatherWorkflows(repo, headers)
 	}
 }
 
-func unmarshalReposRes(body []byte) []map[string]any {
-	// var jsonBody map[string]any
+func unmarshalArray(body []byte) []map[string]any {
 	var jsonBody []map[string]any
 
 	err := json.Unmarshal(body, &jsonBody)
@@ -128,16 +138,54 @@ func extractRepos(jsonBody []map[string]any) []*Repository {
 
 func newRepository(jsonRepo map[string]any) *Repository {
 	repo := Repository{
-		name: jsonRepo["full_name"].(string),
-		url: jsonRepo["url"].(string),
-		contentsUrl: jsonRepo["contents_url"].(string),
+		Name: jsonRepo["full_name"].(string),
+		Url: jsonRepo["url"].(string),
+		ContentsUrl: jsonRepo["contents_url"].(string),
 	}
 	return &repo
 }
 
-func extractWorkflows(repo *Repository, headers map[string]string) {
-	workflowsUrl := strings.Replace(repo.contentsUrl, "{+path}", ".github/workflows", 1)
+func gatherWorkflows(repo *Repository, headers map[string]string) []map[string]any {
+	workflowsUrl := strings.Replace(repo.ContentsUrl, "{+path}", ".github/workflows", 1)
 	res := callAPI(workflowsUrl, headers)
+	if res.StatusCode == 404 {
+		fmt.Printf("There are no workflows in %s repository\n", repo.Name)
+		return nil
+	}
 	bodyBytes := readBody(res)
-	fmt.Println(bodyBytes)
+	jsonBody := unmarshalArray(bodyBytes)
+	workflowsDirectory := extractWorkflows(jsonBody)
+
+	for idx := range workflowsDirectory {
+		fmt.Println(workflowsDirectory[idx])
+	}
+
+	return nil
+}
+
+func extractWorkflows(jsonBody []map[string]any) []*GHContent {
+	workflowsCount := len(jsonBody)
+	output := make([]*GHContent, 0, workflowsCount)
+	for _, jsonWorkflow := range jsonBody {
+		// with type assertion
+		output = append(output, newContent(jsonWorkflow))
+	}
+
+	return output
+}
+
+func newContent(jsonContent map[string]any) *GHContent {
+  workflow := GHContent{
+		Name: 				jsonContent["name"].(string),
+		Path: 				jsonContent["path"].(string),
+		Url: 					jsonContent["url"].(string),
+		Git_url: 			jsonContent["git_url"].(string),
+		Download_url: jsonContent["download_url"].(string),
+		Type: 				jsonContent["type"].(string),
+	}
+	// if workflow.Type == "file" {
+	// 	fmt.Println(jsonContent["content"])
+	// 	workflow.Content = jsonContent["content"].(string)
+	// }
+	return &workflow
 }
