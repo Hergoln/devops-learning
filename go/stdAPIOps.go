@@ -1,5 +1,12 @@
 package main
 
+import (
+	"os"
+	"fmt"
+	"time"
+	"net/http"
+)
+
 func callAPI(url string, headers map[string]string) *http.Response {
 	fmt.Println("Calling url: ", url)
 	req, err := http.NewRequest(http.MethodGet, url, nil)

@@ -3,18 +3,7 @@ package main
 import (
 	"os"
 	"fmt"
-	"net/http"
-	"time"
-	"io/ioutil"
-	"encoding/json"
 	"strings"
-)
-
-var (
-	REQUEST_ERROR int = 1
-	API_CALL_ERROR int = 2
-	UNMARSHAL_ERROR int = 3
-	BYTE_READ_ERROR int = 4
 )
 
 /* task #9
