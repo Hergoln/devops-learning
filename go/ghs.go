@@ -28,6 +28,7 @@ type GHContent struct {
 
 func newContent(jsonContent map[string]any) *GHContent {
   workflow := GHContent{
+		// with type assertion
 		Name: 				jsonContent["name"].(string),
 		Path: 				jsonContent["path"].(string),
 		Url: 					jsonContent["url"].(string),

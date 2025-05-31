@@ -80,6 +80,7 @@ func gatherWorkflows(repo *Repository, headers map[string]string) []*GHContent {
 	jsonBody := unmarshalArray(bodyBytes)
 	workflowsDirectory := extractWorkflows(jsonBody)
 
+	fmt.Printf("Found %d workflows in %s repository\n", len(workflowsDirectory), repo.Name)
 	return workflowsDirectory
 }
 
@@ -87,8 +88,10 @@ func extractWorkflows(jsonBody []map[string]any) []*GHContent {
 	workflowsCount := len(jsonBody)
 	output := make([]*GHContent, 0, workflowsCount)
 	for _, jsonWorkflow := range jsonBody {
-		// with type assertion
-		output = append(output, newContent(jsonWorkflow))
+		workflow := newContent(jsonWorkflow)
+		if workflow.Type == "file" {
+			output = append(output, workflow)
+		}
 	}
 
 	return output
