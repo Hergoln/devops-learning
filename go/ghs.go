@@ -1,6 +1,7 @@
 // github structs
 package main
 
+
 type Repository struct {
 	Name string
 	Url string
@@ -36,9 +37,10 @@ func newContent(jsonContent map[string]any) *GHContent {
 		Download_url: jsonContent["download_url"].(string),
 		Type: 				jsonContent["type"].(string),
 	}
-	// if workflow.Type == "file" {
-	// 	fmt.Println(jsonContent["content"])
-	// 	workflow.Content = jsonContent["content"].(string)
-	// }
+	if jsonContent["type"] == "file" {
+		if jsonContent["content"] != nil {
+			workflow.Content = jsonContent["content"].(string)
+		}
+	}
 	return &workflow
 }

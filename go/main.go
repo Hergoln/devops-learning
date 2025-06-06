@@ -1,11 +1,11 @@
 package main
 
 import (
-	"os"
 	"fmt"
 	"strings"
 	"io/ioutil"
 	"encoding/json"
+	"flag"
 )
 
 /* task #9
@@ -15,17 +15,34 @@ import (
 	4. check whether those files contain workflow which is being look for
 	4a. [STRETCH/NEXT STEP] compare all workflows with set of workflows
 	5. return statistics regarding the usage, which repository uses which workflow
+	6. process repositories in goroutines
 */
 /* task #10
+Cobra framework - https://github.com/spf13/cobra
 	1. Extract command-wise code to separate locations/files
 	2. in main implement parsing of input
 	3. validation could be left to each specific command (command pattern?)
 	4. implement mechanism which would enable --help flag being used on every command
 	5. implement flag to exclude forked repositories
 */
+
+var PAT string
+
+func init() {
+	flag.StringVar(&PAT, "pat", "", "GitHub PAT token")
+	flag.Parse()
+}
+
+func deepCopy(copied map[string]string) map[string]string {
+	copy := map[string]string{}
+	for key, value := range copied {
+		copy[key] = value
+	}
+	return copy
+}
+
 func main() {
 	// read from input or read filename from input and then read from file
-	PAT := os.Args[1]
 	callGitHubAPI(PAT)
 }
 
@@ -45,6 +62,12 @@ func callGitHubAPI(PAT string) {
 
 	for _, repo := range repos {
 		workflows = append(workflows, gatherWorkflows(repo, headers)...)
+	}
+
+	rawHeaders := deepCopy(headers)
+	rawHeaders["Accept"] = "application/vnd.github.raw+json"
+	for idx := range workflows {
+		workflows[idx].Content = retrieveWorkflowContent(workflows[idx], rawHeaders)
 	}
 
 	workflowsJsonified, err := json.Marshal(workflows)
@@ -95,4 +118,15 @@ func extractWorkflows(jsonBody []map[string]any) []*GHContent {
 	}
 
 	return output
+}
+
+func retrieveWorkflowContent(workflowObj *GHContent, headers map[string]string) string {
+	res := callAPI(workflowObj.Download_url, headers)
+	if res.StatusCode == 404 {
+		fmt.Printf("Error during retrieval of %s", workflowObj.Path)
+		fmt.Println(res)
+		return ""
+	}
+
+	return string(readBody(res))
 }
