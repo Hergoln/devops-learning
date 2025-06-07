@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 	"io/ioutil"
 	"encoding/json"
 	"flag"
@@ -34,7 +33,7 @@ var (
 func init() {
 	controls := Control{}
 	controls.PAT = flag.String("pat", "", "GitHub PAT token")
-	controls.COMMAND = flag.String("cmd", "", "Which command is being run")
+	controls.CMD = flag.String("cmd", "", "Which command is being run")
 	flag.Parse()
 
 	valid, err := validateControls(controls)
@@ -55,7 +54,9 @@ func deepCopy(copied map[string]string) map[string]string {
 
 func main() {
 	// read from input or read filename from input and then read from file
-	callGitHubAPI(*CONTROLS.PAT)
+	if *CONTROLS.CMD == STATS_CMD {
+		callGitHubAPI(*CONTROLS.PAT)
+	}
 }
 
 func callGitHubAPI(PAT string) {
@@ -69,7 +70,7 @@ func callGitHubAPI(PAT string) {
 	files := make([]*GHContent, 0)
 
 	for _, repo := range repos {
-		files = append(files, getRepoWorkflowsDirContent(repo, headers)...)
+		files = append(files, getReposDirectoryContent(repo, ".github/workflows", headers)...)
 	}
 
 	rawHeaders := deepCopy(headers)
@@ -87,62 +88,4 @@ func callGitHubAPI(PAT string) {
 	if err != nil {
 		fmt.Println(err)
 	}
-}
-
-func getRepos(headers map[string]string) []*Repository {
-	requestURL := "https://api.github.com/user/repos"
-	res := callAPI(requestURL, headers)
-	bodyBytes := readBody(res)
-	jsonBody := unmarshalArray(bodyBytes)
-	return convertToRepos(jsonBody)
-}
-
-func convertToRepos(jsonBody []map[string]any) []*Repository {
-	reposCount := len(jsonBody)
-	output := make([]*Repository, 0, reposCount)
-	for _, jsonRepo := range jsonBody {
-		// with type assertion
-		output = append(output, newRepository(jsonRepo))
-	}
-
-	return output
-}
-
-func getRepoWorkflowsDirContent(repo *Repository, headers map[string]string) []*GHContent {
-	workflowsUrl := strings.Replace(repo.ContentsUrl, "{+path}", ".github/workflows", 1)
-	res := callAPI(workflowsUrl, headers)
-	if res.StatusCode == 404 {
-		fmt.Printf("There are no workflows in %s repository\n", repo.Name)
-		return nil
-	}
-	bodyBytes := readBody(res)
-	jsonBody := unmarshalArray(bodyBytes)
-	workflowsDirContent := convertToContent(jsonBody)
-
-	fmt.Printf("Found %d workflows in %s repository\n", len(workflowsDirContent), repo.Name)
-	return workflowsDirContent
-}
-
-func convertToContent(jsonBody []map[string]any) []*GHContent {
-	workflowsCount := len(jsonBody)
-	output := make([]*GHContent, 0, workflowsCount)
-	for _, jsonWorkflow := range jsonBody {
-		workflow := newContent(jsonWorkflow)
-		if workflow.Type == "file" {
-			output = append(output, workflow)
-		}
-	}
-
-	return output
-}
-
-func retrieveFileContent(workflowObj *GHContent, headers map[string]string) string {
-	res := callAPI(workflowObj.Download_url, headers)
-	if res.StatusCode == 404 {
-		fmt.Printf("Error during retrieval of %s", workflowObj.Path)
-		fmt.Println(res)
-		return ""
-	}
-
-	return string(readBody(res))
 }

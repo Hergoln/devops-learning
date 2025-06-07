@@ -7,16 +7,17 @@ import (
 )
 
 var (
-	POSSIBLE_CMDS = []string{"workflows_stats"}
+	STATS_CMD = "workflows_stats"
+	POSSIBLE_CMDS = []string{STATS_CMD}
 )
 
 type Control struct {
 	PAT *string
-	COMMAND *string
+	CMD *string
 }
 
 func validateControls(control Control) (bool, error) {
-	if !slices.Contains(POSSIBLE_CMDS, *control.COMMAND) {
+	if !slices.Contains(POSSIBLE_CMDS, *control.CMD) {
 		return false, invalidCommandError()
 	}
 	return true, nil
