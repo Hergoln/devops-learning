@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"flag"
+	"os"
 )
 
 /* task #9
@@ -26,11 +27,22 @@ Cobra framework - https://github.com/spf13/cobra
 	5. implement flag to exclude forked repositories
 */
 
-var PAT string
+var (
+	CONTROLS *Control
+)
 
 func init() {
-	flag.StringVar(&PAT, "pat", "", "GitHub PAT token")
+	controls := Control{}
+	controls.PAT = flag.String("pat", "", "GitHub PAT token")
+	controls.COMMAND = flag.String("cmd", "", "Which command is being run")
 	flag.Parse()
+
+	valid, err := validateControls(controls)
+	if !valid {
+		fmt.Println("Input is not valid, error: ", err)
+		os.Exit(1)
+	}
+	CONTROLS = &controls
 }
 
 func deepCopy(copied map[string]string) map[string]string {
@@ -43,7 +55,7 @@ func deepCopy(copied map[string]string) map[string]string {
 
 func main() {
 	// read from input or read filename from input and then read from file
-	callGitHubAPI(PAT)
+	callGitHubAPI(*CONTROLS.PAT)
 }
 
 func callGitHubAPI(PAT string) {
