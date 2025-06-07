@@ -59,41 +59,45 @@ func main() {
 }
 
 func callGitHubAPI(PAT string) {
-  requestURL := "https://api.github.com/user/repos"
 	headers := map[string]string{
 		"Accept": "application/vnd.github+json",
 		"X-GitHub-Api-Version": "2022-11-28",
 		"Authorization": fmt.Sprintf("Bearer %s", PAT),
 	}
-	res := callAPI(requestURL, headers)
-	bodyBytes := readBody(res)
-	jsonBody := unmarshalArray(bodyBytes)
-	repos := extractRepos(jsonBody)
+  repos := getRepos(headers)
 
-	workflows := make([]*GHContent, 0)
+	files := make([]*GHContent, 0)
 
 	for _, repo := range repos {
-		workflows = append(workflows, gatherWorkflows(repo, headers)...)
+		files = append(files, getRepoWorkflowsDirContent(repo, headers)...)
 	}
 
 	rawHeaders := deepCopy(headers)
 	rawHeaders["Accept"] = "application/vnd.github.raw+json"
-	for idx := range workflows {
-		workflows[idx].Content = retrieveWorkflowContent(workflows[idx], rawHeaders)
+	for idx := range files {
+		files[idx].Content = retrieveFileContent(files[idx], rawHeaders)
 	}
 
-	workflowsJsonified, err := json.Marshal(workflows)
+	filesJsonified, err := json.Marshal(files)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	err = ioutil.WriteFile("output.json", workflowsJsonified, 0777)
+	err = ioutil.WriteFile("output.json", filesJsonified, 0777)
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-func extractRepos(jsonBody []map[string]any) []*Repository {
+func getRepos(headers map[string]string) []*Repository {
+	requestURL := "https://api.github.com/user/repos"
+	res := callAPI(requestURL, headers)
+	bodyBytes := readBody(res)
+	jsonBody := unmarshalArray(bodyBytes)
+	return convertToRepos(jsonBody)
+}
+
+func convertToRepos(jsonBody []map[string]any) []*Repository {
 	reposCount := len(jsonBody)
 	output := make([]*Repository, 0, reposCount)
 	for _, jsonRepo := range jsonBody {
@@ -104,7 +108,7 @@ func extractRepos(jsonBody []map[string]any) []*Repository {
 	return output
 }
 
-func gatherWorkflows(repo *Repository, headers map[string]string) []*GHContent {
+func getRepoWorkflowsDirContent(repo *Repository, headers map[string]string) []*GHContent {
 	workflowsUrl := strings.Replace(repo.ContentsUrl, "{+path}", ".github/workflows", 1)
 	res := callAPI(workflowsUrl, headers)
 	if res.StatusCode == 404 {
@@ -113,13 +117,13 @@ func gatherWorkflows(repo *Repository, headers map[string]string) []*GHContent {
 	}
 	bodyBytes := readBody(res)
 	jsonBody := unmarshalArray(bodyBytes)
-	workflowsDirectory := extractWorkflows(jsonBody)
+	workflowsDirContent := convertToContent(jsonBody)
 
-	fmt.Printf("Found %d workflows in %s repository\n", len(workflowsDirectory), repo.Name)
-	return workflowsDirectory
+	fmt.Printf("Found %d workflows in %s repository\n", len(workflowsDirContent), repo.Name)
+	return workflowsDirContent
 }
 
-func extractWorkflows(jsonBody []map[string]any) []*GHContent {
+func convertToContent(jsonBody []map[string]any) []*GHContent {
 	workflowsCount := len(jsonBody)
 	output := make([]*GHContent, 0, workflowsCount)
 	for _, jsonWorkflow := range jsonBody {
@@ -132,7 +136,7 @@ func extractWorkflows(jsonBody []map[string]any) []*GHContent {
 	return output
 }
 
-func retrieveWorkflowContent(workflowObj *GHContent, headers map[string]string) string {
+func retrieveFileContent(workflowObj *GHContent, headers map[string]string) string {
 	res := callAPI(workflowObj.Download_url, headers)
 	if res.StatusCode == 404 {
 		fmt.Printf("Error during retrieval of %s", workflowObj.Path)
