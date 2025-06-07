@@ -6,16 +6,17 @@ import (
 	"encoding/json"
 	"flag"
 	"os"
+	"strings"
 )
 
 /* task #9
 	1. gather all repositories token has access to
 	2. use https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content api endpoint to get directory .github/workflows
-	3. retrieve all workflows files
-	4. check whether those files contain workflow which is being look for
+	3. retrieve all workflows files content
+	4. check whether those files contain workflow from specified repository
 	4a. [STRETCH/NEXT STEP] compare all workflows with set of workflows
 	5. return statistics regarding the usage, which repository uses which workflow
-	6. process repositories in goroutines
+	6. process repositories in goroutines -> requires to process repo by repo
 */
 /* task #10
 Cobra framework - https://github.com/spf13/cobra
@@ -34,6 +35,7 @@ func init() {
 	controls := Control{}
 	controls.PAT = flag.String("pat", "", "GitHub PAT token")
 	controls.CMD = flag.String("cmd", "", "Which command is being run")
+	controls.WF_REPO = flag.String("workflows_repo", "", "repository ({OWNER}/{REPO NAME}) that workflows are being checked against")
 	flag.Parse()
 
 	valid, err := validateControls(controls)
@@ -55,15 +57,15 @@ func deepCopy(copied map[string]string) map[string]string {
 func main() {
 	// read from input or read filename from input and then read from file
 	if *CONTROLS.CMD == STATS_CMD {
-		callGitHubAPI(*CONTROLS.PAT)
+		gatherWorkflowsStats(CONTROLS)
 	}
 }
 
-func callGitHubAPI(PAT string) {
+func gatherWorkflowsStats(CONTROLS *Control) {
 	headers := map[string]string{
 		"Accept": "application/vnd.github+json",
 		"X-GitHub-Api-Version": "2022-11-28",
-		"Authorization": fmt.Sprintf("Bearer %s", PAT),
+		"Authorization": fmt.Sprintf("Bearer %s", *CONTROLS.PAT),
 	}
   repos := getRepos(headers)
 
@@ -77,6 +79,10 @@ func callGitHubAPI(PAT string) {
 	rawHeaders["Accept"] = "application/vnd.github.raw+json"
 	for idx := range files {
 		files[idx].Content = retrieveFileContent(files[idx], rawHeaders)
+		uses := extractUses(files[idx].Content)
+		if len(uses) > 0 {
+			fmt.Println("stuff is being used", uses)
+		}
 	}
 
 	filesJsonified, err := json.Marshal(files)
@@ -88,4 +94,15 @@ func callGitHubAPI(PAT string) {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func extractUses(content string) []string {
+	uses := make([]string, 0)
+	for line := range strings.Lines(content) {
+		idx := strings.Index(line, "uses:")
+		if idx > -1 {
+			uses = append(uses, strings.TrimSpace(line))
+		}
+	}
+	return uses
 }

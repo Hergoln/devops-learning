@@ -14,6 +14,7 @@ var (
 type Control struct {
 	PAT *string
 	CMD *string
+	WF_REPO *string
 }
 
 func validateControls(control Control) (bool, error) {
