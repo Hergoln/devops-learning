@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"unicode"
+	"errors"
 )
 
 /* task #9
@@ -87,7 +88,7 @@ func gatherWorkflowsStats(CONTROLS *Control) {
 		fmt.Println(err)
 	}
 
-	err = ioutil.WriteFile("output.json", statssonified, 0777)
+	err = ioutil.WriteFile("output.csv", statssonified, 0777)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -113,4 +114,17 @@ func extractUses(content string) []*Usage {
 		}
 	}
 	return uses
+}
+
+func statsToCSV(stats []*WorkflowStat) []string {
+	csv := make([]string, 0)
+	for idx := range stats {
+		csv = append(csv, stats[idx].toCSVRows())
+	}
+	fmt.Println(strings.Join(csv, "\n"))
+	return csv
+}
+
+func saveAsCSV(stats []*WorkflowStat) error {
+// TODO:
 }
