@@ -83,14 +83,18 @@ func gatherWorkflowsStats(CONTROLS *Control) {
 		}
 	}
 
-	statssonified, err := json.Marshal(stats)
-	if err != nil {
-		fmt.Println(err)
-	}
+	statsToCSV(stats)
 
-	err = ioutil.WriteFile("output.csv", statssonified, 0777)
-	if err != nil {
-		fmt.Println(err)
+	// TODO: call saving to CSV
+	
+	// statssonified, err := json.Marshal(stats)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
+	// err = ioutil.WriteFile("output.csv", statssonified, 0777)
+	// if err != nil {
+	// 	fmt.Println(err)
 	}
 }
 
@@ -119,12 +123,12 @@ func extractUses(content string) []*Usage {
 func statsToCSV(stats []*WorkflowStat) []string {
 	csv := make([]string, 0)
 	for idx := range stats {
-		csv = append(csv, stats[idx].toCSVRows())
+		csv = append(csv, stats[idx].toCSVRows()...)
 	}
 	fmt.Println(strings.Join(csv, "\n"))
 	return csv
 }
 
 func saveAsCSV(stats []*WorkflowStat) error {
-// TODO:
+	return errors.New("tesxt")
 }
