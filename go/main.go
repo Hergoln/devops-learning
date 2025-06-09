@@ -86,7 +86,7 @@ func gatherWorkflowsStats(CONTROLS *Control) {
 	statsToCSV(stats)
 
 	// TODO: call saving to CSV
-	
+
 	// statssonified, err := json.Marshal(stats)
 	// if err != nil {
 	// 	fmt.Println(err)
@@ -125,7 +125,6 @@ func statsToCSV(stats []*WorkflowStat) []string {
 	for idx := range stats {
 		csv = append(csv, stats[idx].toCSVRows()...)
 	}
-	fmt.Println(strings.Join(csv, "\n"))
 	return csv
 }
 
