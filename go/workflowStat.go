@@ -18,10 +18,11 @@ type Usage struct {
 	Tag string
 }
 
-func newWorkflowStat(path string, repoUrl string) *WorkflowStat {
+func newWorkflowStat(path string, repoUrl string, usings []*Usage) *WorkflowStat {
 	return &WorkflowStat{
 		Path: path,
 		RepoUrl: repoUrl,
+		Usings: usings,
 	}
 }
 

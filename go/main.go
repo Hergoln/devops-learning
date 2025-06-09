@@ -69,31 +69,25 @@ func gatherWorkflowsStats(CONTROLS *Control) {
 		"Authorization": fmt.Sprintf("Bearer %s", *CONTROLS.PAT),
 	}
   repos := getRepos(headers)
-
-	files := make([]*GHContent, 0)
-
-	for _, repo := range repos {
-		files = append(files, getReposDirectoryContent(repo, ".github/workflows", headers)...)
-	}
-
 	rawHeaders := deepCopy(headers)
 	rawHeaders["Accept"] = "application/vnd.github.raw+json"
+	stats := make([]*WorkflowStat, 0)
 
-	var uses []*Usage
-	for idx := range files {
-		files[idx].Content = retrieveFileContent(files[idx], rawHeaders)
-		uses = extractUses(files[idx].Content)
-		if len(uses) > 0 {
-			fmt.Println("stuff is being used", uses)
+	for _, repo := range repos {
+		files := getReposDirectoryContent(repo, ".github/workflows", headers)
+		for fileIdx := range files {
+			files[fileIdx].Content = retrieveFileContent(files[fileIdx], rawHeaders)
+			uses := extractUses(files[fileIdx].Content)
+			stats = append(stats, newWorkflowStat(files[fileIdx].Path, repo.Url, uses))
 		}
 	}
 
-	usesJsonified, err := json.Marshal(uses)
+	statssonified, err := json.Marshal(stats)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	err = ioutil.WriteFile("output.json", usesJsonified, 0777)
+	err = ioutil.WriteFile("output.json", statssonified, 0777)
 	if err != nil {
 		fmt.Println(err)
 	}
