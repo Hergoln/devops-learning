@@ -7,6 +7,7 @@ import (
 	"flag"
 	"os"
 	"strings"
+	"unicode"
 )
 
 /* task #9
@@ -77,31 +78,44 @@ func gatherWorkflowsStats(CONTROLS *Control) {
 
 	rawHeaders := deepCopy(headers)
 	rawHeaders["Accept"] = "application/vnd.github.raw+json"
+
+	var uses []*Usage
 	for idx := range files {
 		files[idx].Content = retrieveFileContent(files[idx], rawHeaders)
-		uses := extractUses(files[idx].Content)
+		uses = extractUses(files[idx].Content)
 		if len(uses) > 0 {
 			fmt.Println("stuff is being used", uses)
 		}
 	}
 
-	filesJsonified, err := json.Marshal(files)
+	usesJsonified, err := json.Marshal(uses)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	err = ioutil.WriteFile("output.json", filesJsonified, 0777)
+	err = ioutil.WriteFile("output.json", usesJsonified, 0777)
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-func extractUses(content string) []string {
-	uses := make([]string, 0)
-	for line := range strings.Lines(content) {
-		idx := strings.Index(line, "uses:")
-		if idx > -1 {
-			uses = append(uses, strings.TrimSpace(line))
+func extractUses(content string) []*Usage {
+	uses := make([]*Usage, 0)
+	for l := range strings.Lines(content) {
+		usesIdx := strings.Index(l, "uses:")
+
+		if usesIdx > -1 {
+			line := strings.TrimSpace(l[usesIdx+len("uses:"):])
+			tagIdx := strings.Index(line, "@")
+			path := line[:tagIdx]
+			line = line[tagIdx+1:]
+			commentIdx := strings.IndexFunc(line, unicode.IsSpace)
+			fmt.Println(line)
+			if commentIdx > -1 {
+				uses = append(uses, newUsage(path, "", line[:commentIdx]))
+			} else {
+				uses = append(uses, newUsage(path, "", line))
+			}
 		}
 	}
 	return uses

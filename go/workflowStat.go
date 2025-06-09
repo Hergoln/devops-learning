@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -13,9 +12,10 @@ type WorkflowStat struct {
 
 type Usage struct {
 	// whatever comes after "uses:"
-	UsesPath string
+	Path string
 	// Action, Workflow (?)
 	Type string
+	Tag string
 }
 
 func newWorkflowStat(path string, repoUrl string) *WorkflowStat {
@@ -29,8 +29,16 @@ func newWorkflowStat(path string, repoUrl string) *WorkflowStat {
 func (stat *WorkflowStat) toCSVRows() []string {
 	base := make([]string, 0, len(stat.Usings))
 	for idx := range stat.Usings {
-		row := strings.Join([]string{stat.Path, stat.RepoUrl, stat.Usings[idx].UsesPath, stat.Usings[idx].Type}, ",")
+		row := strings.Join([]string{stat.Path, stat.RepoUrl, stat.Usings[idx].Path, stat.Usings[idx].Type}, ",")
 		base = append(base, row)
 	}
 	return base
+}
+
+func newUsage(path string, type_ string, tag string) *Usage {
+	return &Usage{
+		Path: path,
+		Type: type_,
+		Tag: tag,
+	}
 }
