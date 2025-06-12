@@ -9,12 +9,8 @@ import (
 )
 
 /* task #9
-	1. gather all repositories token has access to
-	2. use https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content api endpoint to get directory .github/workflows
-	3. retrieve all workflows files content
 	4. check whether those files contain workflow from specified repository
 	4a. [STRETCH/NEXT STEP] compare all workflows with set of workflows
-	5. return statistics regarding the usage, which repository uses which workflow
 	6. process repositories in goroutines -> requires to process repo by repo
 */
 /* task #10
@@ -112,7 +108,8 @@ func extractUses(content string) []*Usage {
 }
 
 func statsToCSV(stats []*WorkflowStat) []string {
-	csv := make([]string, 0)
+	headers := "Workflow Path,Repository URL,Workflow file Path,Type"
+	csv := []string{headers}
 	for idx := range stats {
 		csv = append(csv, stats[idx].toCSVRows()...)
 	}
