@@ -10,9 +10,6 @@ import (
 	"sync"
 )
 
-/* task #9
-	5. process repositories in goroutines -> requires to process repo by repo
-*/
 /* task #10
 Cobra framework - https://github.com/spf13/cobra
 	1. Extract command-wise code to separate locations/files
