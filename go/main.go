@@ -9,9 +9,7 @@ import (
 )
 
 /* task #9
-	4. check whether those files contain workflow from specified repository
-	4a. [STRETCH/NEXT STEP] compare all workflows with set of workflows
-	6. process repositories in goroutines -> requires to process repo by repo
+	5. process repositories in goroutines -> requires to process repo by repo
 */
 /* task #10
 Cobra framework - https://github.com/spf13/cobra
@@ -82,7 +80,9 @@ func gatherWorkflowsStats(CONTROLS *Control) {
 		}
 	}
 
-	err := saveAsCSV(stats)
+	stat := newStats(stats)
+
+	err := stat.SaveAsCSV()
 	check(err)
 }
 
@@ -105,30 +105,4 @@ func extractUses(content string) []*Usage {
 		}
 	}
 	return uses
-}
-
-func statsToCSV(stats []*WorkflowStat) []string {
-	headers := "Workflow Path,Repository URL,Workflow file Path,Type"
-	csv := []string{headers}
-	for idx := range stats {
-		csv = append(csv, stats[idx].toCSVRows()...)
-	}
-	return csv
-}
-
-func saveAsCSV(stats []*WorkflowStat) error {
-	lines := statsToCSV(stats)
-	// create truncates file
-	file, err := os.Create("output.csv")
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	for _, line := range lines {
-		_, err := file.WriteString(line + "\n")
-		check(err)
-	}
-
-	return nil
 }

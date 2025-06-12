@@ -2,7 +2,13 @@ package main
 
 import (
 	"strings"
+	"os"
 )
+
+type WorkflowsStatistics struct {
+	Stats []*WorkflowStat
+	CSVHeaders []string
+}
 
 type WorkflowStat struct {
 	Path 				string
@@ -26,6 +32,25 @@ func newWorkflowStat(path string, repoUrl string, usings []*Usage) *WorkflowStat
 	}
 }
 
+func newUsage(path string, type_ string, tag string) *Usage {
+	return &Usage{
+		Path: path,
+		Type: type_,
+		Tag: tag,
+	}
+}
+
+func newStats(stats []*WorkflowStat) *WorkflowsStatistics {
+	return &WorkflowsStatistics{
+		Stats: stats,
+		CSVHeaders: []string{"Workflow Path","Repository URL","Workflow file Path","Type"},
+	}
+}
+
+func (stat *WorkflowsStatistics) Headers() string {
+	return strings.Join(stat.CSVHeaders, ",")
+}
+
 // func newWorkflowStat()
 func (stat *WorkflowStat) toCSVRows() []string {
 	base := make([]string, 0, len(stat.Usings))
@@ -36,10 +61,27 @@ func (stat *WorkflowStat) toCSVRows() []string {
 	return base
 }
 
-func newUsage(path string, type_ string, tag string) *Usage {
-	return &Usage{
-		Path: path,
-		Type: type_,
-		Tag: tag,
+func (stats *WorkflowsStatistics) StatsToCSV() []string {
+	csv := []string{stats.Headers()}
+	for idx := range stats.Stats {
+		csv = append(csv, stats.Stats[idx].toCSVRows()...)
 	}
+	return csv
+}
+
+func (stats *WorkflowsStatistics) SaveAsCSV() error {
+	lines := stats.StatsToCSV()
+	// create truncates file
+	file, err := os.Create("output.csv")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	for _, line := range lines {
+		_, err := file.WriteString(line + "\n")
+		check(err)
+	}
+
+	return nil
 }
