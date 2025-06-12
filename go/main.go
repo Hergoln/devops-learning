@@ -111,8 +111,7 @@ func gatherWorkflowsStats(CONTROLS *Control) {
 
 func extractUses(content string) []*Usage {
 	uses := make([]*Usage, 0)
-	seq := strings.Lines(content)
-	for l := range seq {
+	for _, l := range strings.Split(content, "\n") {
 		usesIdx := strings.Index(l, "uses:")
 
 		if usesIdx > -1 {
