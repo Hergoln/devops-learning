@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 	"unicode"
+	"time"
+	"sync"
 )
 
 /* task #9
@@ -55,8 +57,21 @@ func deepCopy(copied map[string]string) map[string]string {
 
 func main() {
 	// read from input or read filename from input and then read from file
+	start := time.Now()
 	if *CONTROLS.CMD == STATS_CMD {
 		gatherWorkflowsStats(CONTROLS)
+	}
+	elapsed := time.Since(start)
+	fmt.Println("Process took: ", elapsed, " miliseconds")
+}
+
+func ReposStats(output chan *WorkflowStat, repoHeaders map[string]string, rawHeaders map[string]string, repo *Repository) {
+	files := getReposDirectoryContent(repo, ".github/workflows", repoHeaders)
+	for fileIdx := range files {
+		files[fileIdx].Content = retrieveFileContent(files[fileIdx], rawHeaders)
+		uses := extractUses(files[fileIdx].Content)
+		stats := newWorkflowStat(files[fileIdx].Path, repo.Url, uses)
+		output <- stats
 	}
 }
 
@@ -70,19 +85,30 @@ func gatherWorkflowsStats(CONTROLS *Control) {
 	rawHeaders := deepCopy(headers)
 	rawHeaders["Accept"] = "application/vnd.github.raw+json"
 	stats := make([]*WorkflowStat, 0)
+	statsChannel := make(chan *WorkflowStat)
+	var wg sync.WaitGroup
 
 	for _, repo := range repos {
-		files := getReposDirectoryContent(repo, ".github/workflows", headers)
-		for fileIdx := range files {
-			files[fileIdx].Content = retrieveFileContent(files[fileIdx], rawHeaders)
-			uses := extractUses(files[fileIdx].Content)
-			stats = append(stats, newWorkflowStat(files[fileIdx].Path, repo.Url, uses))
-		}
+		// use goroutines
+		wg.Add(1)
+		go func(){
+			defer wg.Done()
+			ReposStats(statsChannel, headers, rawHeaders, repo)
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(statsChannel)
+	}()
+
+	for cStat := range statsChannel {
+		stats = append(stats, cStat)
 	}
 
 	stat := newStats(stats)
 
-	err := stat.SaveAsCSV()
+	err := stat.SaveAsCSV("output_goroutines.csv")
 	check(err)
 }
 

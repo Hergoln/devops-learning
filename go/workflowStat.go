@@ -69,10 +69,10 @@ func (stats *WorkflowsStatistics) StatsToCSV() []string {
 	return csv
 }
 
-func (stats *WorkflowsStatistics) SaveAsCSV() error {
+func (stats *WorkflowsStatistics) SaveAsCSV(filename string) error {
 	lines := stats.StatsToCSV()
 	// create truncates file
-	file, err := os.Create("output.csv")
+	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
