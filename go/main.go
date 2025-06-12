@@ -2,13 +2,10 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"encoding/json"
 	"flag"
 	"os"
 	"strings"
 	"unicode"
-	"errors"
 )
 
 /* task #9
@@ -48,6 +45,12 @@ func init() {
 	CONTROLS = &controls
 }
 
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
 func deepCopy(copied map[string]string) map[string]string {
 	copy := map[string]string{}
 	for key, value := range copied {
@@ -83,19 +86,8 @@ func gatherWorkflowsStats(CONTROLS *Control) {
 		}
 	}
 
-	statsToCSV(stats)
-
-	// TODO: call saving to CSV
-
-	// statssonified, err := json.Marshal(stats)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-
-	// err = ioutil.WriteFile("output.csv", statssonified, 0777)
-	// if err != nil {
-	// 	fmt.Println(err)
-	}
+	err := saveAsCSV(stats)
+	check(err)
 }
 
 func extractUses(content string) []*Usage {
@@ -109,7 +101,6 @@ func extractUses(content string) []*Usage {
 			path := line[:tagIdx]
 			line = line[tagIdx+1:]
 			commentIdx := strings.IndexFunc(line, unicode.IsSpace)
-			fmt.Println(line)
 			if commentIdx > -1 {
 				uses = append(uses, newUsage(path, "", line[:commentIdx]))
 			} else {
@@ -129,5 +120,18 @@ func statsToCSV(stats []*WorkflowStat) []string {
 }
 
 func saveAsCSV(stats []*WorkflowStat) error {
-	return errors.New("tesxt")
+	lines := statsToCSV(stats)
+	// create truncates file
+	file, err := os.Create("output.csv")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	for _, line := range lines {
+		_, err := file.WriteString(line + "\n")
+		check(err)
+	}
+
+	return nil
 }
