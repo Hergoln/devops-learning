@@ -22,22 +22,6 @@ Cobra framework - https://github.com/spf13/cobra
 var (
 	CONTROLS *Control
 )
-
-func init() {
-	controls := Control{}
-	controls.PAT = flag.String("pat", "", "GitHub PAT token")
-	controls.CMD = flag.String("cmd", "", "Which command is being run")
-	controls.WF_REPO = flag.String("workflows_repo", "", "repository ({OWNER}/{REPO NAME}) that workflows are being checked against")
-	flag.Parse()
-
-	valid, err := validateControls(controls)
-	if !valid {
-		fmt.Println("Input is not valid, error: ", err)
-		os.Exit(1)
-	}
-	CONTROLS = &controls
-}
-
 func check(e error) {
 	if e != nil {
 		panic(e)
@@ -54,6 +38,19 @@ func deepCopy(copied map[string]string) map[string]string {
 
 func main() {
 	// read from input or read filename from input and then read from file
+	controls := Control{}
+	controls.PAT = flag.String("pat", "", "GitHub PAT token")
+	controls.CMD = flag.String("cmd", "", "Which command is being run")
+	controls.WF_REPO = flag.String("workflows_repo", "", "repository ({OWNER}/{REPO NAME}) that workflows are being checked against")
+	flag.Parse()
+
+	valid, err := validateControls(controls)
+	if !valid {
+		fmt.Println("Input is not valid, error: ", err)
+		os.Exit(1)
+	}
+	CONTROLS = &controls
+
 	start := time.Now()
 	if *CONTROLS.CMD == STATS_CMD {
 		gatherWorkflowsStats(CONTROLS)
