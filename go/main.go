@@ -11,7 +11,9 @@ import (
 )
 
 /* task #10
-Cobra framework - https://github.com/spf13/cobra
+Choose one framework and work on it
+Cobra - https://github.com/spf13/cobra - large/complex
+urfave/cli - https://github.com/urfave/cli - small/medium
 	1. Extract command-wise code to separate locations/files
 	2. in main implement parsing of input
 	3. validation could be left to each specific command (command pattern?)
