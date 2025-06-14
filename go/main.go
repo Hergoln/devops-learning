@@ -22,6 +22,7 @@ Cobra framework - https://github.com/spf13/cobra
 var (
 	CONTROLS *Control
 )
+
 func check(e error) {
 	if e != nil {
 		panic(e)
