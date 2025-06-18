@@ -8,10 +8,13 @@ import (
 	"unicode"
 	"time"
 	"sync"
+	"my_module/inputc"
 )
 
 /* task #10
-Cobra framework - https://github.com/spf13/cobra
+Choose one framework and work on it
+Cobra - https://github.com/spf13/cobra - large/complex
+urfave/cli - https://github.com/urfave/cli - small/medium
 	1. Extract command-wise code to separate locations/files
 	2. in main implement parsing of input
 	3. validation could be left to each specific command (command pattern?)
@@ -20,8 +23,9 @@ Cobra framework - https://github.com/spf13/cobra
 */
 
 var (
-	CONTROLS *Control
+	CONTROLS *inputc.Control
 )
+
 func check(e error) {
 	if e != nil {
 		panic(e)
@@ -38,13 +42,13 @@ func deepCopy(copied map[string]string) map[string]string {
 
 func main() {
 	// read from input or read filename from input and then read from file
-	controls := Control{}
+	controls := inputc.Control{}
 	controls.PAT = flag.String("pat", "", "GitHub PAT token")
 	controls.CMD = flag.String("cmd", "", "Which command is being run")
 	controls.WF_REPO = flag.String("workflows_repo", "", "repository ({OWNER}/{REPO NAME}) that workflows are being checked against")
 	flag.Parse()
 
-	valid, err := validateControls(controls)
+	valid, err := inputc.ValidateControls(controls)
 	if !valid {
 		fmt.Println("Input is not valid, error: ", err)
 		os.Exit(1)
@@ -52,7 +56,7 @@ func main() {
 	CONTROLS = &controls
 
 	start := time.Now()
-	if *CONTROLS.CMD == STATS_CMD {
+	if *CONTROLS.CMD == inputc.STATS_CMD {
 		gatherWorkflowsStats(CONTROLS)
 	}
 	elapsed := time.Since(start)
@@ -69,7 +73,7 @@ func ReposStats(output chan *WorkflowStat, repoHeaders map[string]string, rawHea
 	}
 }
 
-func gatherWorkflowsStats(CONTROLS *Control) {
+func gatherWorkflowsStats(CONTROLS *inputc.Control) {
 	headers := map[string]string{
 		"Accept": "application/vnd.github+json",
 		"X-GitHub-Api-Version": "2022-11-28",

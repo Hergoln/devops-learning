@@ -1,4 +1,4 @@
-package main
+package inputc
 
 import (
 	"slices"
@@ -17,13 +17,13 @@ type Control struct {
 	WF_REPO *string
 }
 
-func validateControls(control Control) (bool, error) {
+func ValidateControls(control Control) (bool, error) {
 	if !slices.Contains(POSSIBLE_CMDS, *control.CMD) {
-		return false, invalidCommandError()
+		return false, InvalidCommandError()
 	}
 	return true, nil
 }
 
-func invalidCommandError() error {
+func InvalidCommandError() error {
 	return errors.New(fmt.Sprintf("Command is not one of valid commands: %s", POSSIBLE_CMDS))
 }

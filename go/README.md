@@ -1,4 +1,8 @@
-Testing REST API usage for potential Hacker News implementation of my own.
+# Go CLI application to deal with things (not fully defined yet)
+
+## Features
+* gather statistics regarding usage of reusable workflows and actions within GitHub Actions workflows
+  * repositories that script looks into are all repositories accessible using given PAT
 
 ## Notes
 When running code using container and wants to use a volume, have to pass in absolute path instead of relative path.
