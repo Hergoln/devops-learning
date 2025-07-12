@@ -1,18 +1,19 @@
-package main
+package std_api
 
 import (
-	"os"
 	"fmt"
-	"time"
+	"my_module/std_errors"
 	"net/http"
+	"os"
+	"time"
 )
 
-func callAPI(url string, headers map[string]string) *http.Response {
+func CallAPI(url string, headers map[string]string) *http.Response {
 	fmt.Println("Calling url: ", url)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(REQUEST_ERROR)
+		os.Exit(std_errors.REQUEST_ERROR)
 	}
 
 	for header, value := range headers {
@@ -27,7 +28,7 @@ func callAPI(url string, headers map[string]string) *http.Response {
 
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(API_CALL_ERROR)
+		os.Exit(std_errors.API_CALL_ERROR)
 	}
 
 	return res

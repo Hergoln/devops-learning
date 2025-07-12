@@ -1,29 +1,29 @@
-package main
+package inputc
 
 import (
-	"slices"
 	"errors"
 	"fmt"
+	"slices"
 )
 
 var (
-	STATS_CMD = "workflows_stats"
+	STATS_CMD     = "workflows_stats"
 	POSSIBLE_CMDS = []string{STATS_CMD}
 )
 
 type Control struct {
-	PAT *string
-	CMD *string
+	PAT     *string
+	CMD     *string
 	WF_REPO *string
 }
 
-func validateControls(control Control) (bool, error) {
+func ValidateControls(control Control) (bool, error) {
 	if !slices.Contains(POSSIBLE_CMDS, *control.CMD) {
-		return false, invalidCommandError()
+		return false, InvalidCommandError()
 	}
 	return true, nil
 }
 
-func invalidCommandError() error {
+func InvalidCommandError() error {
 	return errors.New(fmt.Sprintf("Command is not one of valid commands: %s", POSSIBLE_CMDS))
 }

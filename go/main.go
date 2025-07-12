@@ -1,17 +1,21 @@
 package main
 
 import (
-	"fmt"
 	"flag"
+	"fmt"
+	"my_module/inputc"
+	"my_module/std_github"
 	"os"
 	"strings"
-	"unicode"
-	"time"
 	"sync"
+	"time"
+	"unicode"
 )
 
 /* task #10
-Cobra framework - https://github.com/spf13/cobra
+Choose one framework and work on it
+Cobra - https://github.com/spf13/cobra - large/complex
+urfave/cli - https://github.com/urfave/cli - small/medium
 	1. Extract command-wise code to separate locations/files
 	2. in main implement parsing of input
 	3. validation could be left to each specific command (command pattern?)
@@ -20,13 +24,8 @@ Cobra framework - https://github.com/spf13/cobra
 */
 
 var (
-	CONTROLS *Control
+	CONTROLS *inputc.Control
 )
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
 
 func deepCopy(copied map[string]string) map[string]string {
 	copy := map[string]string{}
@@ -38,13 +37,13 @@ func deepCopy(copied map[string]string) map[string]string {
 
 func main() {
 	// read from input or read filename from input and then read from file
-	controls := Control{}
+	controls := inputc.Control{}
 	controls.PAT = flag.String("pat", "", "GitHub PAT token")
 	controls.CMD = flag.String("cmd", "", "Which command is being run")
 	controls.WF_REPO = flag.String("workflows_repo", "", "repository ({OWNER}/{REPO NAME}) that workflows are being checked against")
 	flag.Parse()
 
-	valid, err := validateControls(controls)
+	valid, err := inputc.ValidateControls(controls)
 	if !valid {
 		fmt.Println("Input is not valid, error: ", err)
 		os.Exit(1)
@@ -52,40 +51,40 @@ func main() {
 	CONTROLS = &controls
 
 	start := time.Now()
-	if *CONTROLS.CMD == STATS_CMD {
+	if *CONTROLS.CMD == inputc.STATS_CMD {
 		gatherWorkflowsStats(CONTROLS)
 	}
 	elapsed := time.Since(start)
 	fmt.Println("Process took: ", elapsed, " miliseconds")
 }
 
-func ReposStats(output chan *WorkflowStat, repoHeaders map[string]string, rawHeaders map[string]string, repo *Repository) {
-	files := getReposDirectoryContent(repo, ".github/workflows", repoHeaders)
+func ReposStats(output chan *std_github.WorkflowStat, repoHeaders map[string]string, rawHeaders map[string]string, repo *std_github.Repository) {
+	files := std_github.GetReposDirectoryContent(repo, ".github/workflows", repoHeaders)
 	for fileIdx := range files {
-		files[fileIdx].Content = retrieveFileContent(files[fileIdx], rawHeaders)
+		files[fileIdx].Content = std_github.RetrieveFileContent(files[fileIdx], rawHeaders)
 		uses := extractUses(files[fileIdx].Content)
-		stats := newWorkflowStat(files[fileIdx].Path, repo.Url, uses)
+		stats := std_github.NewWorkflowStat(files[fileIdx].Path, repo.Url, uses)
 		output <- stats
 	}
 }
 
-func gatherWorkflowsStats(CONTROLS *Control) {
+func gatherWorkflowsStats(CONTROLS *inputc.Control) {
 	headers := map[string]string{
-		"Accept": "application/vnd.github+json",
+		"Accept":               "application/vnd.github+json",
 		"X-GitHub-Api-Version": "2022-11-28",
-		"Authorization": fmt.Sprintf("Bearer %s", *CONTROLS.PAT),
+		"Authorization":        fmt.Sprintf("Bearer %s", *CONTROLS.PAT),
 	}
-  repos := getRepos(headers)
+	repos := std_github.GetRepos(headers)
 	rawHeaders := deepCopy(headers)
 	rawHeaders["Accept"] = "application/vnd.github.raw+json"
-	stats := make([]*WorkflowStat, 0)
-	statsChannel := make(chan *WorkflowStat)
+	stats := make([]*std_github.WorkflowStat, 0)
+	statsChannel := make(chan *std_github.WorkflowStat)
 	var wg sync.WaitGroup
 
 	for _, repo := range repos {
 		// use goroutines
 		wg.Add(1)
-		go func(){
+		go func() {
 			defer wg.Done()
 			ReposStats(statsChannel, headers, rawHeaders, repo)
 		}()
@@ -100,14 +99,16 @@ func gatherWorkflowsStats(CONTROLS *Control) {
 		stats = append(stats, cStat)
 	}
 
-	stat := newStats(stats)
+	stat := std_github.NewStats(stats)
 
 	err := stat.SaveAsCSV("output_goroutines.csv")
-	check(err)
+	if err != nil {
+		panic(err)
+	}
 }
 
-func extractUses(content string) []*Usage {
-	uses := make([]*Usage, 0)
+func extractUses(content string) []*std_github.Usage {
+	uses := make([]*std_github.Usage, 0)
 	for _, l := range strings.Split(content, "\n") {
 		usesIdx := strings.Index(l, "uses:")
 
@@ -118,9 +119,9 @@ func extractUses(content string) []*Usage {
 			line = line[tagIdx+1:]
 			commentIdx := strings.IndexFunc(line, unicode.IsSpace)
 			if commentIdx > -1 {
-				uses = append(uses, newUsage(path, "", line[:commentIdx]))
+				uses = append(uses, std_github.NewUsage(path, "", line[:commentIdx]))
 			} else {
-				uses = append(uses, newUsage(path, "", line))
+				uses = append(uses, std_github.NewUsage(path, "", line))
 			}
 		}
 	}
