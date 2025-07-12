@@ -58,7 +58,7 @@ func main() {
 	fmt.Println("Process took: ", elapsed, " miliseconds")
 }
 
-func ReposStats(output chan *WorkflowStat, repoHeaders map[string]string, rawHeaders map[string]string, repo *Repository) {
+func ReposStats(output chan *std_github.WorkflowStat, repoHeaders map[string]string, rawHeaders map[string]string, repo *std_github.Repository) {
 	files := std_github.GetReposDirectoryContent(repo, ".github/workflows", repoHeaders)
 	for fileIdx := range files {
 		files[fileIdx].Content = std_github.RetrieveFileContent(files[fileIdx], rawHeaders)
@@ -107,8 +107,8 @@ func gatherWorkflowsStats(CONTROLS *inputc.Control) {
 	}
 }
 
-func extractUses(content string) []*Usage {
-	uses := make([]*Usage, 0)
+func extractUses(content string) []*std_github.Usage {
+	uses := make([]*std_github.Usage, 0)
 	for _, l := range strings.Split(content, "\n") {
 		usesIdx := strings.Index(l, "uses:")
 
