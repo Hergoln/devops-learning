@@ -1,14 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"flag"
+	"fmt"
+	"my_module/inputc"
 	"os"
 	"strings"
-	"unicode"
-	"time"
 	"sync"
-	"my_module/inputc"
+	"time"
+	"unicode"
 )
 
 /* task #10
@@ -75,11 +75,11 @@ func ReposStats(output chan *WorkflowStat, repoHeaders map[string]string, rawHea
 
 func gatherWorkflowsStats(CONTROLS *inputc.Control) {
 	headers := map[string]string{
-		"Accept": "application/vnd.github+json",
+		"Accept":               "application/vnd.github+json",
 		"X-GitHub-Api-Version": "2022-11-28",
-		"Authorization": fmt.Sprintf("Bearer %s", *CONTROLS.PAT),
+		"Authorization":        fmt.Sprintf("Bearer %s", *CONTROLS.PAT),
 	}
-  repos := getRepos(headers)
+	repos := getRepos(headers)
 	rawHeaders := deepCopy(headers)
 	rawHeaders["Accept"] = "application/vnd.github.raw+json"
 	stats := make([]*WorkflowStat, 0)
@@ -89,7 +89,7 @@ func gatherWorkflowsStats(CONTROLS *inputc.Control) {
 	for _, repo := range repos {
 		// use goroutines
 		wg.Add(1)
-		go func(){
+		go func() {
 			defer wg.Done()
 			ReposStats(statsChannel, headers, rawHeaders, repo)
 		}()

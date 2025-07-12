@@ -1,11 +1,11 @@
 package main
 
 import (
-	"os"
-	"fmt"
-	"net/http"
-	"io/ioutil"
 	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
 )
 
 func unmarshalArray(body []byte) []map[string]any {
@@ -22,9 +22,9 @@ func unmarshalArray(body []byte) []map[string]any {
 
 func readBody(response *http.Response) []byte {
 	defer response.Body.Close()
-	bytes, err := ioutil.ReadAll(response.Body)
-	
-	if response.StatusCode == http.StatusOK {	
+	bytes, err := io.ReadAll(response.Body)
+
+	if response.StatusCode == http.StatusOK {
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(BYTE_READ_ERROR)
