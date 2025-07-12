@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"my_module/inputc"
+	"my_module/std_github"
 	"os"
 	"strings"
 	"sync"
@@ -25,12 +26,6 @@ urfave/cli - https://github.com/urfave/cli - small/medium
 var (
 	CONTROLS *inputc.Control
 )
-
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
 
 func deepCopy(copied map[string]string) map[string]string {
 	copy := map[string]string{}
@@ -64,11 +59,11 @@ func main() {
 }
 
 func ReposStats(output chan *WorkflowStat, repoHeaders map[string]string, rawHeaders map[string]string, repo *Repository) {
-	files := getReposDirectoryContent(repo, ".github/workflows", repoHeaders)
+	files := std_github.GetReposDirectoryContent(repo, ".github/workflows", repoHeaders)
 	for fileIdx := range files {
-		files[fileIdx].Content = retrieveFileContent(files[fileIdx], rawHeaders)
+		files[fileIdx].Content = std_github.RetrieveFileContent(files[fileIdx], rawHeaders)
 		uses := extractUses(files[fileIdx].Content)
-		stats := newWorkflowStat(files[fileIdx].Path, repo.Url, uses)
+		stats := std_github.NewWorkflowStat(files[fileIdx].Path, repo.Url, uses)
 		output <- stats
 	}
 }
@@ -79,11 +74,11 @@ func gatherWorkflowsStats(CONTROLS *inputc.Control) {
 		"X-GitHub-Api-Version": "2022-11-28",
 		"Authorization":        fmt.Sprintf("Bearer %s", *CONTROLS.PAT),
 	}
-	repos := getRepos(headers)
+	repos := std_github.GetRepos(headers)
 	rawHeaders := deepCopy(headers)
 	rawHeaders["Accept"] = "application/vnd.github.raw+json"
-	stats := make([]*WorkflowStat, 0)
-	statsChannel := make(chan *WorkflowStat)
+	stats := make([]*std_github.WorkflowStat, 0)
+	statsChannel := make(chan *std_github.WorkflowStat)
 	var wg sync.WaitGroup
 
 	for _, repo := range repos {
@@ -104,10 +99,12 @@ func gatherWorkflowsStats(CONTROLS *inputc.Control) {
 		stats = append(stats, cStat)
 	}
 
-	stat := newStats(stats)
+	stat := std_github.NewStats(stats)
 
 	err := stat.SaveAsCSV("output_goroutines.csv")
-	check(err)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func extractUses(content string) []*Usage {
@@ -122,9 +119,9 @@ func extractUses(content string) []*Usage {
 			line = line[tagIdx+1:]
 			commentIdx := strings.IndexFunc(line, unicode.IsSpace)
 			if commentIdx > -1 {
-				uses = append(uses, newUsage(path, "", line[:commentIdx]))
+				uses = append(uses, std_github.NewUsage(path, "", line[:commentIdx]))
 			} else {
-				uses = append(uses, newUsage(path, "", line))
+				uses = append(uses, std_github.NewUsage(path, "", line))
 			}
 		}
 	}

@@ -1,19 +1,19 @@
 package inputc
 
 import (
-	"slices"
 	"errors"
 	"fmt"
+	"slices"
 )
 
 var (
-	STATS_CMD = "workflows_stats"
+	STATS_CMD     = "workflows_stats"
 	POSSIBLE_CMDS = []string{STATS_CMD}
 )
 
 type Control struct {
-	PAT *string
-	CMD *string
+	PAT     *string
+	CMD     *string
 	WF_REPO *string
 }
 

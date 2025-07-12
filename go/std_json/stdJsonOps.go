@@ -1,33 +1,34 @@
-package main
+package std_json
 
 import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"my_module/std_errors"
 	"net/http"
 	"os"
 )
 
-func unmarshalArray(body []byte) []map[string]any {
+func UnmarshalArray(body []byte) []map[string]any {
 	var jsonBody []map[string]any
 
 	err := json.Unmarshal(body, &jsonBody)
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(UNMARSHAL_ERROR)
+		os.Exit(std_errors.UNMARSHAL_ERROR)
 	}
 
 	return jsonBody
 }
 
-func readBody(response *http.Response) []byte {
+func ReadBody(response *http.Response) []byte {
 	defer response.Body.Close()
 	bytes, err := io.ReadAll(response.Body)
 
 	if response.StatusCode == http.StatusOK {
 		if err != nil {
 			fmt.Println(err.Error())
-			os.Exit(BYTE_READ_ERROR)
+			os.Exit(std_errors.BYTE_READ_ERROR)
 		}
 		return bytes
 	}
